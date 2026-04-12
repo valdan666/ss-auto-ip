@@ -8,11 +8,11 @@
 
 # Проверяем установлен ли Shadowsocks-libev
 if ! command -v ss-server &> /dev/null; then
-  echo "Shadowsocks-libev не найден. Устанавливается..."
+  echo -e "\033[96mShadowsocks-libev не найден. Устанавливается...\033[0m"
   apt update -y
   apt install -y shadowsocks-libev jq openssl
 else
-  echo "Shadowsocks-libev уже установлен. Пропуск установки."
+  echo -e "\033[96mShadowsocks-libev уже установлен. Пропуск установки.\033[0m"
 fi
 
 # Папка для конфигов
@@ -27,6 +27,7 @@ base_port=8388
 
 # Цвета
 GREEN="\033[32m"
+CYAN="\033[96m"
 RESET="\033[0m"
 
 # Получаем список внешних IP
@@ -51,7 +52,6 @@ done
 # Добавляем новые IP, если нет в списке
 for ip in $current_ips; do
   if ! printf '%s\n' "${existing_ips[@]}" | grep -qx "$ip"; then
-    # Ищем свободный порт
     port=$base_port
     while printf '%s\n' "${used_ports[@]}" | grep -qx "$port"; do
       port=$((port + 1))
@@ -71,7 +71,7 @@ for ip in $current_ips; do
 }
 EOF
     ips_changed=1
-    echo "Добавлен новый IP: $ip (порт $port)"
+    echo -e "${CYAN}Добавлен новый IP: $ip (порт $port)${RESET}"
   fi
 done
 
@@ -82,7 +82,7 @@ for conf in "${existing_confs[@]}"; do
   if ! echo "$current_ips" | grep -qw "$conf_ip"; then
     rm -f "$conf"
     ips_changed=1
-    echo "Удалён устаревший конфиг (IP отсутствует): $conf_ip"
+    echo -e "${CYAN}Удалён устаревший конфиг (IP отсутствует): $conf_ip${RESET}"
   fi
 done
 
@@ -100,6 +100,7 @@ if [ $ips_changed -eq 1 ]; then
 
   start_script="/usr/local/bin/ss_multi_start.sh"
   echo "#!/bin/bash" > "$start_script"
+  echo "sleep 20" >> "$start_script"
   echo "pkill ss-server 2>/dev/null" >> "$start_script"
   for conf in "$config_dir"/ss_*.json; do
     echo "nohup ss-server -c \"$conf\" -u >/dev/null 2>&1 &" >> "$start_script"
@@ -108,16 +109,20 @@ if [ $ips_changed -eq 1 ]; then
   $start_script
   chmod 644 "$links_file"
 
-  echo
-  echo "Обновлены конфиги Shadowsocks и перезапущены серверы."
+  echo -e "\n${CYAN}Обновлены конфиги Shadowsocks и перезапущены серверы.${RESET}"
 else
-  echo
-  echo "Изменений в IP или конфигурации нет, перезапуск не требуется."
+  echo -e "\n${CYAN}Изменений в IP или конфигурации нет, перезапуск не требуется.${RESET}"
+fi
+
+# Добавляем автозапуск в cron при первом запуске, если его нет
+if ! crontab -l 2>/dev/null | grep -q "/usr/local/bin/ss_multi_start.sh"; then
+  (crontab -l 2>/dev/null; echo "@reboot /usr/local/bin/ss_multi_start.sh") | crontab -
+  echo -e "${CYAN}Добавлен автозапуск Shadowsocks с отложенным стартом в cron.${RESET}"
 fi
 
 echo
-echo "Файлы конфигурации: $config_dir"
-echo "Файл ссылок: $links_file"
+echo -e "${CYAN}Файлы конфигурации:${RESET} $config_dir"
+echo -e "${CYAN}Файл ссылок:${RESET} $links_file"
 echo
 echo -e "${GREEN}Ссылки для импорта:${RESET}"
 cat "$links_file" 2>/dev/null | while read -r line; do
@@ -125,10 +130,10 @@ cat "$links_file" 2>/dev/null | while read -r line; do
 done
 
 echo
-echo "Для ручного перезапуска всех серверов:"
+echo -e "${CYAN}Для ручного перезапуска всех серверов:${RESET}"
 echo -e "${GREEN}/usr/local/bin/ss_multi_start.sh${RESET}"
 echo
-echo "Для автозапуска после перезагрузки добавь в cron:"
+echo -e "${CYAN}Для автозапуска после перезагрузки добавлен в cron:${RESET}"
 echo -e "${GREEN}@reboot /usr/local/bin/ss_multi_start.sh${RESET}"
 
 # Конец скрипта
