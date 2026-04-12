@@ -28,6 +28,8 @@ base_port=8388
 # Цвета
 GREEN="\033[32m"
 CYAN="\033[96m"
+ORANGE="\033[33m"
+RED="\033[31m"
 RESET="\033[0m"
 
 # Получаем список внешних IP
@@ -121,10 +123,10 @@ if ! crontab -l 2>/dev/null | grep -q "/usr/local/bin/ss_multi_start.sh"; then
 fi
 
 echo
-echo -e "${CYAN}Файлы конфигурации:${RESET} $config_dir"
+echo -e "${ORANGE}Файлы конфигурации:${RESET} $config_dir"
 echo -e "${CYAN}Файл ссылок:${RESET} $links_file"
 echo
-echo -e "${GREEN}Ссылки для импорта:${RESET}"
+echo -e "${ORANGE}Ссылки для импорта:${RESET}"
 cat "$links_file" 2>/dev/null | while read -r line; do
   [ -n "$line" ] && echo -e "${CYAN}$line${RESET}"
 done
