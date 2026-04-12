@@ -8,11 +8,11 @@
 
 # Проверяем установлен ли Shadowsocks-libev
 if ! command -v ss-server &> /dev/null; then
-  echo -e "\033[96mShadowsocks-libev не найден. Устанавливается...\033[0m"
+  echo -e "\033[96mShadowsocks-libev. Устанавливается...\033[0m"
   apt update -y
   apt install -y shadowsocks-libev jq openssl
-else
-  echo -e "\033[96mShadowsocks-libev уже установлен. Пропуск установки.\033[0m"
+#else
+#  echo -e "\033[96mShadowsocks-libev уже установлен. Пропуск установки.\033[0m"
 fi
 
 # Папка для конфигов
@@ -73,7 +73,7 @@ for ip in $current_ips; do
 }
 EOF
     ips_changed=1
-    echo -e "${CYAN}Добавлен новый IP: $ip (порт $port)${RESET}"
+    echo -e "${CYAN}new IP: $ip [$port]${RESET}"
   fi
 done
 
@@ -84,12 +84,14 @@ for conf in "${existing_confs[@]}"; do
   if ! echo "$current_ips" | grep -qw "$conf_ip"; then
     rm -f "$conf"
     ips_changed=1
-    echo -e "${CYAN}Удалён устаревший конфиг (IP отсутствует): $conf_ip${RESET}"
+    echo -e "${RED}del IP: $conf_ip${RESET}"
   fi
 done
 
 # Если были изменения — обновляем файл ссылок и перезапускаем серверы
 if [ $ips_changed -eq 1 ]; then
+  echo -e "\n${ORANGE}update Shadowsocks | reboot server...${RESET}"
+  
   echo "" > "$links_file"
   for conf in "$config_dir"/ss_*.json; do
     [ -f "$conf" ] || continue
@@ -97,7 +99,7 @@ if [ $ips_changed -eq 1 ]; then
     port=$(jq -r '.server_port' "$conf")
     password=$(jq -r '.password' "$conf")
     enc=$(echo -n "aes-256-gcm:$password@$ip:$port" | base64 -w 0 | tr -d '=')
-    echo "ss://$enc#SS-$ip" >> "$links_file"
+    echo "ss://$enc#$ip" >> "$links_file"
   done
 
   start_script="/usr/local/bin/ss_multi_start.sh"
@@ -111,7 +113,7 @@ if [ $ips_changed -eq 1 ]; then
   $start_script
   chmod 644 "$links_file"
 
-  echo -e "\n${CYAN}Обновлены конфиги Shadowsocks и перезапущены серверы.${RESET}"
+  #echo -e "\n${CYAN}Обновлены конфиги Shadowsocks и перезапущены серверы.${RESET}"
 else
   echo -e "\n${CYAN}Изменений в IP или конфигурации нет, перезапуск не требуется.${RESET}"
 fi
