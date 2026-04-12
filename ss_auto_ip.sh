@@ -13,47 +13,30 @@ fi
 config_dir="/etc/shadowsocks-libev"
 mkdir -p "$config_dir"
 
-# Определяем, куда сохранять файл ссылок
-if [ -d "/var/www/html" ]; then
-  links_file="/var/www/html/ss_links.txt"
-  web_root="/var/www/html"
-  server_type="nginx"
-elif [ -d "/usr/share/nginx/html" ]; then
-  links_file="/usr/share/nginx/html/ss_links.txt"
-  web_root="/usr/share/nginx/html"
-  server_type="nginx"
-else
-  links_file="/root/ss_links.txt"
-  web_root="/root"
-  server_type="python"
-fi
+# Путь к файлу ссылок
+links_file="/root/ss_links.txt"
 
-# Если nginx отсутствует, устанавливаем
-if [ "$server_type" = "nginx" ]; then
-  if ! dpkg -s nginx &> /dev/null; then
-    apt install -y nginx
-    systemctl enable nginx
-    systemctl start nginx
-  fi
-fi
-
-# Очищаем старые конфиги, если были
+# Очищаем старые конфиги и файл ссылок
 rm -f $config_dir/ss_*.json
-
-# Очищаем файл ссылок
 echo "" > "$links_file"
 
-# Получаем список всех внешних IP
-all_ips=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -vE '^127|10\.|192\.168|172\.1[6-9]|172\.2[0-9]|172\.3[0-1]')
+# Получаем список всех внешних IPv4, исключая внутренние диапазоны
+all_ips=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -vE '^127|10\.|192\.168|172\.(1[6-9]|2[0-9]|3[0-1])')
+
 base_port=8388
 n=0
 
+# ANSI-коды для цветного вывода
+GREEN="\033[32m"
+RESET="\033[0m"
+
+# Генерируем конфиги и ссылки
 for ip in $all_ips; do
   port=$((base_port + n))
   password=$(openssl rand -hex 6)
   conf="$config_dir/ss_$port.json"
 
-  # Создание отдельного конфига для IP
+  # Создание отдельного конфига для каждого IP
   cat > "$conf" <<EOF
 {
     "server": "$ip",
@@ -66,7 +49,7 @@ for ip in $all_ips; do
 }
 EOF
 
-  # Генерация ss:// ссылки
+  # Генерация ссылки ss://
   base64_str=$(echo -n "aes-256-gcm:$password@$ip:$port" | base64 -w 0 | tr -d '=')
   echo "ss://$base64_str#SS-$ip" >> "$links_file"
 
@@ -88,22 +71,25 @@ $start_script
 # Настраиваем права на файл ссылок
 chmod 644 "$links_file"
 
-main_ip=$(hostname -I | awk '{print $1}')
-
+# Вывод информации
 echo
 echo "Shadowsocks успешно настроен."
 echo "Найдено IP: $(echo "$all_ips" | wc -l)"
-echo "Файлы конфигурации: $config_dir/ss_*.json"
-echo "Файл ссылок: $links_file"
+echo "Файлы конфигурации сохранены в: $config_dir"
+echo "Файл со всеми ссылками: $links_file"
 echo
-if [ "$server_type" = "nginx" ]; then
-  echo "Скачай файл со всеми ссылками по адресу:"
-  echo "http://$main_ip/ss_links.txt"
-else
-  echo "nginx не обнаружен, использую Python HTTP сервер:"
-  echo "http://$main_ip:8000/ss_links.txt"
-  echo "Чтобы завершить вручную — Ctrl+C"
-  cd "$web_root" && python3 -m http.server 8000
-fi
+
+# Цветной вывод ссылок
+echo -e "${GREEN}Ссылки для импорта в Nekobox:${RESET}"
+cat "$links_file" | while read -r line; do
+  echo -e "${GREEN}$line${RESET}"
+done
+
+echo
+echo "Для перезапуска всех серверов вручную выполни:"
+echo -e "${GREEN}/usr/local/bin/ss_multi_start.sh${RESET}"
+echo
+echo "Для автозапуска после перезагрузки добавь в cron:"
+echo -e "${GREEN}@reboot /usr/local/bin/ss_multi_start.sh${RESET}"
 
 # Конец скрипта
