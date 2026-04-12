@@ -6,6 +6,15 @@
 # Создает новые конфиги для новых IP и удаляет старые для отсутствующих
 # Если ничего не изменилось — просто выходит без действий
 
+# nano /etc/shadowsocks-libev/ss_8388.json
+# cat /root/ss_links.txt
+
+# Посмотреть содержимое директории можно командой:  
+# ls -la /etc/shadowsocks-libev
+
+# Если хочешь видеть только файлы конфигураций, то:  
+# ls /etc/shadowsocks-libev/ss_*.json
+
 # Проверяем установлен ли Shadowsocks-libev
 if ! command -v ss-server &> /dev/null; then
   echo -e "\033[96mShadowsocks-libev. Устанавливается...\033[0m"
@@ -28,7 +37,7 @@ base_port=8388
 # Цвета
 GREEN="\033[32m"
 CYAN="\033[96m"
-ORANGE="\033[33m"
+ORANGE="\033[1;33m"
 RED="\033[31m"
 RESET="\033[0m"
 
