@@ -126,14 +126,14 @@ echo -e "${CYAN}Файл ссылок:${RESET} $links_file"
 echo
 echo -e "${GREEN}Ссылки для импорта:${RESET}"
 cat "$links_file" 2>/dev/null | while read -r line; do
-  [ -n "$line" ] && echo -e "${GREEN}$line${RESET}"
+  [ -n "$line" ] && echo -e "${CYAN}$line${RESET}"
 done
 
-echo
-echo -e "${CYAN}Для ручного перезапуска всех серверов:${RESET}"
-echo -e "${GREEN}/usr/local/bin/ss_multi_start.sh${RESET}"
-echo
-echo -e "${CYAN}Для автозапуска после перезагрузки добавлен в cron:${RESET}"
-echo -e "${GREEN}@reboot /usr/local/bin/ss_multi_start.sh${RESET}"
+#echo
+#echo -e "${CYAN}Для ручного перезапуска всех серверов:${RESET}"
+#echo -e "${GREEN}/usr/local/bin/ss_multi_start.sh${RESET}"
+#echo
+#echo -e "${CYAN}Для автозапуска после перезагрузки добавлен в cron:${RESET}"
+#echo -e "${GREEN}@reboot /usr/local/bin/ss_multi_start.sh${RESET}"
 
 # Конец скрипта
