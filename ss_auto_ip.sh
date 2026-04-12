@@ -1,43 +1,65 @@
 #!/bin/bash
 
 # Скрипт установки и настройки Shadowsocks-libev
-# Создаёт отдельный конфиг для каждого внешнего IP и объединяет все ссылки ss:// в один файл
-# Подходит для серверов с несколькими IP, автоматически обновляется при повторном запуске
+# При первом запуске устанавливает shadowsocks-libev
+# При последующих — только проверяет и обновляет конфиги при изменении IP
+# Создает новые конфиги для новых IP и удаляет старые для отсутствующих
+# Если ничего не изменилось — просто выходит без действий
 
-# Проверка установки Shadowsocks, при необходимости установка
-if ! command -v ssserver &> /dev/null; then
-  apt update
-  apt install shadowsocks-libev -y
+# Проверяем установлен ли Shadowsocks-libev
+if ! command -v ss-server &> /dev/null; then
+  echo "Shadowsocks-libev не найден. Устанавливается..."
+  apt update -y
+  apt install -y shadowsocks-libev jq openssl
+else
+  echo "Shadowsocks-libev уже установлен. Пропуск установки."
 fi
 
+# Папка для конфигов
 config_dir="/etc/shadowsocks-libev"
 mkdir -p "$config_dir"
 
-# Путь к файлу ссылок
+# Файл ссылок
 links_file="/root/ss_links.txt"
 
-# Очищаем старые конфиги и файл ссылок
-rm -f $config_dir/ss_*.json
-echo "" > "$links_file"
-
-# Получаем список всех внешних IPv4, исключая внутренние диапазоны
-all_ips=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -vE '^127|10\.|192\.168|172\.(1[6-9]|2[0-9]|3[0-1])')
-
+# Основной порт
 base_port=8388
-n=0
 
-# ANSI-коды для цветного вывода
+# Цвета
 GREEN="\033[32m"
 RESET="\033[0m"
 
-# Генерируем конфиги и ссылки
-for ip in $all_ips; do
-  port=$((base_port + n))
-  password=$(openssl rand -hex 6)
-  conf="$config_dir/ss_$port.json"
+# Получаем список внешних IP
+current_ips=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -vE '^127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])')
 
-  # Создание отдельного конфига для каждого IP
-  cat > "$conf" <<EOF
+# Считываем уже существующие конфиги
+existing_confs=($(ls "$config_dir"/ss_*.json 2>/dev/null))
+existing_ips=()
+for conf in "${existing_confs[@]}"; do
+  [ -f "$conf" ] && existing_ips+=($(jq -r '.server' "$conf"))
+done
+
+# Флаг изменения
+ips_changed=0
+
+# Определяем занятые порты (чтобы не пересекались)
+used_ports=()
+for conf in "${existing_confs[@]}"; do
+  [ -f "$conf" ] && used_ports+=($(jq -r '.server_port' "$conf"))
+done
+
+# Добавляем новые IP, если нет в списке
+for ip in $current_ips; do
+  if ! printf '%s\n' "${existing_ips[@]}" | grep -qx "$ip"; then
+    # Ищем свободный порт
+    port=$base_port
+    while printf '%s\n' "${used_ports[@]}" | grep -qx "$port"; do
+      port=$((port + 1))
+    done
+    used_ports+=("$port")
+    password=$(openssl rand -hex 6)
+    conf="$config_dir/ss_${port}.json"
+    cat > "$conf" <<EOF
 {
     "server": "$ip",
     "server_port": $port,
@@ -48,45 +70,62 @@ for ip in $all_ips; do
     "no_delay": true
 }
 EOF
-
-  # Генерация ссылки ss://
-  base64_str=$(echo -n "aes-256-gcm:$password@$ip:$port" | base64 -w 0 | tr -d '=')
-  echo "ss://$base64_str#SS-$ip" >> "$links_file"
-
-  n=$((n + 1))
+    ips_changed=1
+    echo "Добавлен новый IP: $ip (порт $port)"
+  fi
 done
 
-# Создаём скрипт автозапуска всех конфигов
-start_script="/usr/local/bin/ss_multi_start.sh"
-echo "#!/bin/bash" > "$start_script"
-echo "pkill ss-server 2>/dev/null" >> "$start_script"
-for conf in $config_dir/ss_*.json; do
-  echo "nohup ss-server -c $conf -u >/dev/null 2>&1 &" >> "$start_script"
-done
-chmod +x "$start_script"
-
-# Запускаем все серверы
-$start_script
-
-# Настраиваем права на файл ссылок
-chmod 644 "$links_file"
-
-# Вывод информации
-echo
-echo "Shadowsocks успешно настроен."
-echo "Найдено IP: $(echo "$all_ips" | wc -l)"
-echo "Файлы конфигурации сохранены в: $config_dir"
-echo "Файл со всеми ссылками: $links_file"
-echo
-
-# Цветной вывод ссылок
-echo -e "${GREEN}Ссылки для импорта в Nekobox:${RESET}"
-cat "$links_file" | while read -r line; do
-  echo -e "${GREEN}$line${RESET}"
+# Удаляем конфиги для IP, которых больше нет
+for conf in "${existing_confs[@]}"; do
+  [ -f "$conf" ] || continue
+  conf_ip=$(jq -r '.server' "$conf")
+  if ! echo "$current_ips" | grep -qw "$conf_ip"; then
+    rm -f "$conf"
+    ips_changed=1
+    echo "Удалён устаревший конфиг (IP отсутствует): $conf_ip"
+  fi
 done
 
+# Если были изменения — обновляем файл ссылок и перезапускаем серверы
+if [ $ips_changed -eq 1 ]; then
+  echo "" > "$links_file"
+  for conf in "$config_dir"/ss_*.json; do
+    [ -f "$conf" ] || continue
+    ip=$(jq -r '.server' "$conf")
+    port=$(jq -r '.server_port' "$conf")
+    password=$(jq -r '.password' "$conf")
+    enc=$(echo -n "aes-256-gcm:$password@$ip:$port" | base64 -w 0 | tr -d '=')
+    echo "ss://$enc#SS-$ip" >> "$links_file"
+  done
+
+  start_script="/usr/local/bin/ss_multi_start.sh"
+  echo "#!/bin/bash" > "$start_script"
+  echo "pkill ss-server 2>/dev/null" >> "$start_script"
+  for conf in "$config_dir"/ss_*.json; do
+    echo "nohup ss-server -c \"$conf\" -u >/dev/null 2>&1 &" >> "$start_script"
+  done
+  chmod +x "$start_script"
+  $start_script
+  chmod 644 "$links_file"
+
+  echo
+  echo "Обновлены конфиги Shadowsocks и перезапущены серверы."
+else
+  echo
+  echo "Изменений в IP или конфигурации нет, перезапуск не требуется."
+fi
+
 echo
-echo "Для перезапуска всех серверов вручную выполни:"
+echo "Файлы конфигурации: $config_dir"
+echo "Файл ссылок: $links_file"
+echo
+echo -e "${GREEN}Ссылки для импорта:${RESET}"
+cat "$links_file" 2>/dev/null | while read -r line; do
+  [ -n "$line" ] && echo -e "${GREEN}$line${RESET}"
+done
+
+echo
+echo "Для ручного перезапуска всех серверов:"
 echo -e "${GREEN}/usr/local/bin/ss_multi_start.sh${RESET}"
 echo
 echo "Для автозапуска после перезагрузки добавь в cron:"
