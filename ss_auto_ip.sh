@@ -44,8 +44,6 @@ BLUE="\033[38;5;34m"       # new
 RED="\033[31m"
 RESET="\033[0m"
 
-Whale="\e[1;97"
-
 # Получаем список внешних IP
 current_ips=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -vE '^127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])')
 
@@ -148,12 +146,13 @@ echo -en "${ORANGE}Ссылки для импорта:${RESET}"
 cat "$links_file" 2>/dev/null | while read -r line; do
   ip="${line##*#}"
   if printf '%s\n' "${new_ips[@]}" | grep -qx "$ip"; then
-    echo -e "${Whale}$line${RESET}"
+    echo -e "${BLUE}$line${RESET}"
   else
-    #echo -e "\e[1;42m$line${RESET}"
-    echo -e "${Whale}$line${RESET}"
+    #echo -e "\e[1;42m$line${RESET}" BLUE
+    echo -e "${BLUE}$line${RESET}"
   fi
 done
+echo
 
 #cat "$links_file" 2>/dev/null | while read -r line; do
 #  [ -n "$line" ] && echo -e "${GREEN}$line${RESET}"
