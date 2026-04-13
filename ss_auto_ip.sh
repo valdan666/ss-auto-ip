@@ -101,7 +101,7 @@ done
 
 # Если были изменения — обновляем файл ссылок и перезапускаем серверы
 if [ $ips_changed -eq 1 ]; then
-  echo -e "\n${ORANGE}update Shadowsocks | reboot server...${RESET}"
+  echo -e "\nupdate Shadowsocks | reboot server..."
   
   echo "" > "$links_file"
   for conf in "$config_dir"/ss_*.json; do
