@@ -39,7 +39,7 @@ base_port=8388
 # Цвета
 GREEN="\033[32m"
 CYAN="\033[96m"
-ORANGE="\e[38;5;208m"
+ORANGE="\033[38;5;208m"
 RED="\033[31m"
 RESET="\033[0m"
 
@@ -84,7 +84,7 @@ for ip in $current_ips; do
 }
 EOF
     ips_changed=1
-    echo -e "${CYAN}new IP: $ip [$port]${RESET}"
+    echo -e "${GREEN}new IP: $ip [$port]${RESET}"
   fi
 done
 
@@ -136,12 +136,12 @@ if ! crontab -l 2>/dev/null | grep -q "/usr/local/bin/ss_multi_start.sh"; then
 fi
 
 echo
-echo -e "${ORANGE}Файлы config:${RESET} $config_dir"
-echo -e "${ORANGE}Файл  ссылок:${RESET} $links_file"
+echo -e "${GREEN}Файлы config:${RESET} $config_dir"
+echo -e "${GREEN}Файл  ссылок:${RESET} $links_file"
 echo
 echo -e "${ORANGE}Ссылки для импорта:${RESET}"
 cat "$links_file" 2>/dev/null | while read -r line; do
-  [ -n "$line" ] && echo -e "${ORANGE}$line${RESET}"
+  [ -n "$line" ] && echo -e "${GREEN}$line${RESET}"
 done
 
 #echo
