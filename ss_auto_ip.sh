@@ -82,12 +82,13 @@ for ip in $current_ips; do
     "timeout": 300,
     "method": "aes-256-gcm",
     "fast_open": true,
-    "no_delay": true
+    "no_delay": true,
+    "bind_address": "$ip"
 }
 EOF
     ips_changed=1
     new_ips+=("$ip")           # new
-    echo -e "new IP: ${GREEN}$ip [$port]${RESET}"
+    echo -e "new IP: ${GREEN}$ip${RESET}\t$port"
   fi
 done
 
