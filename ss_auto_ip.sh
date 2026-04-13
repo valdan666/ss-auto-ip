@@ -38,9 +38,9 @@ base_port=8388
 
 # Цвета
 GREEN="\033[32m"
-CYAN="\033[96m"
 ORANGE="\033[38;5;208m"
 BLUE="\033[38;5;34m"       # new
+WHITE="\033[1;97m"         # new
 RED="\033[31m"
 RESET="\033[0m"
 
@@ -146,7 +146,7 @@ echo -en "${ORANGE}Ссылки для импорта:${RESET}"
 cat "$links_file" 2>/dev/null | while read -r line; do
   ip="${line##*#}"
   if printf '%s\n' "${new_ips[@]}" | grep -qx "$ip"; then
-    echo -e "${GREEN}$line${RESET}"
+    echo -e "${WHITE}$line${RESET}"
   else
     #echo -e "\e[1;42m$line${RESET}" BLUE
     echo -e "${GREEN}$line${RESET}"
