@@ -40,8 +40,10 @@ base_port=8388
 GREEN="\033[32m"
 CYAN="\033[96m"
 ORANGE="\033[38;5;208m"
+BLUE="\033[1;34m"       # new
 RED="\033[31m"
 RESET="\033[0m"
+
 
 # Получаем список внешних IP
 current_ips=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -vE '^127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])')
@@ -55,6 +57,7 @@ done
 
 # Флаг изменения
 ips_changed=0
+new_ips=()               # new
 
 # Определяем занятые порты (чтобы не пересекались)
 used_ports=()
@@ -84,6 +87,7 @@ for ip in $current_ips; do
 }
 EOF
     ips_changed=1
+    new_ips+=("$ip")           # new
     echo -e "${GREEN}new IP: $ip [$port]${RESET}"
   fi
 done
@@ -140,8 +144,18 @@ echo -e "${GREEN}Файлы config:${RESET} $config_dir"
 echo -e "${GREEN}Файл  ссылок:${RESET} $links_file"
 echo
 echo -e "${ORANGE}Ссылки для импорта:${RESET}"
+
+#cat "$links_file" 2>/dev/null | while read -r line; do
+#  [ -n "$line" ] && echo -e "${GREEN}$line${RESET}"
+#done
+
 cat "$links_file" 2>/dev/null | while read -r line; do
-  [ -n "$line" ] && echo -e "${GREEN}$line${RESET}"
+  ip="${line##*#}"
+  if printf '%s\n' "${new_ips[@]}" | grep -qx "$ip"; then
+    echo -e "${BLUE}$line${RESET}"
+  else
+    echo -e "${GREEN}$line${RESET}"
+  fi
 done
 
 #echo
