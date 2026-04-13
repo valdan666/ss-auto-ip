@@ -149,7 +149,7 @@ cat "$links_file" 2>/dev/null | while read -r line; do
   if printf '%s\n' "${new_ips[@]}" | grep -qx "$ip"; then
     echo -e "${BLUE}$line${RESET}"
   else
-    echo -e "${GREEN}$line${RESET}"
+    echo -e "\e[1;36m$line${RESET}"
   fi
 done
 
