@@ -39,7 +39,7 @@ base_port=8388
 # Цвета
 GREEN="\033[32m"
 CYAN="\033[96m"
-ORANGE="\e[38;5;51m"
+ORANGE="\e[38;5;208m"
 RED="\033[31m"
 RESET="\033[0m"
 
@@ -132,16 +132,16 @@ fi
 # Добавляем автозапуск в cron при первом запуске, если его нет
 if ! crontab -l 2>/dev/null | grep -q "/usr/local/bin/ss_multi_start.sh"; then
   (crontab -l 2>/dev/null; echo "@reboot /usr/local/bin/ss_multi_start.sh") | crontab -
-  echo -e "${CYAN}Добавлен автозапуск Shadowsocks с отложенным стартом в cron.${RESET}"
+  #echo -e "${ORANGE}Добавлен автозапуск Shadowsocks с отложенным стартом в cron.${RESET}"
 fi
 
 echo
-echo -e "${ORANGE}Файлы конфигурации:${RESET} $config_dir"
-echo -e "${CYAN}Файл ссылок:${RESET} $links_file"
+echo -e "${ORANGE}Файлы config:${RESET} $config_dir"
+echo -e "${ORANGE}Файл  ссылок:${RESET} $links_file"
 echo
-echo -e "\e[38;5;208mСсылки для импорта:${RESET}"
+echo -e "${ORANGE}Ссылки для импорта:${RESET}"
 cat "$links_file" 2>/dev/null | while read -r line; do
-  [ -n "$line" ] && echo -e "${CYAN}$line${RESET}"
+  [ -n "$line" ] && echo -e "${ORANGE}$line${RESET}"
 done
 
 #echo
