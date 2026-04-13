@@ -139,7 +139,7 @@ echo
 echo -e "${ORANGE}Файлы конфигурации:${RESET} $config_dir"
 echo -e "${CYAN}Файл ссылок:${RESET} $links_file"
 echo
-echo -e "${ORANGE}Ссылки для импорта:${RESET}"
+echo -e "\e[38;5;208mСсылки для импорта:${RESET}"
 cat "$links_file" 2>/dev/null | while read -r line; do
   [ -n "$line" ] && echo -e "${CYAN}$line${RESET}"
 done
