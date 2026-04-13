@@ -39,7 +39,7 @@ base_port=8388
 # Цвета
 GREEN="\033[32m"
 CYAN="\033[96m"
-ORANGE="\[38;5;51m"
+ORANGE="\e[38;5;51m"
 RED="\033[31m"
 RESET="\033[0m"
 
