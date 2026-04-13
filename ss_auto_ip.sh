@@ -143,12 +143,7 @@ echo
 echo -e "${GREEN}Файлы config:${RESET} $config_dir"
 echo -e "${GREEN}Файл  ссылок:${RESET} $links_file"
 echo
-echo -e "${ORANGE}Ссылки для импорта:${RESET}"
-
-#cat "$links_file" 2>/dev/null | while read -r line; do
-#  [ -n "$line" ] && echo -e "${GREEN}$line${RESET}"
-#done
-
+echo -en "${ORANGE}Ссылки для импорта:${RESET}"
 cat "$links_file" 2>/dev/null | while read -r line; do
   ip="${line##*#}"
   if printf '%s\n' "${new_ips[@]}" | grep -qx "$ip"; then
@@ -157,6 +152,10 @@ cat "$links_file" 2>/dev/null | while read -r line; do
     echo -e "${GREEN}$line${RESET}"
   fi
 done
+
+#cat "$links_file" 2>/dev/null | while read -r line; do
+#  [ -n "$line" ] && echo -e "${GREEN}$line${RESET}"
+#done
 
 #echo
 #echo -e "${CYAN}Для ручного перезапуска всех серверов:${RESET}"
