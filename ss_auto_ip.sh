@@ -40,7 +40,7 @@ base_port=8388
 GREEN="\033[32m"
 CYAN="\033[96m"
 ORANGE="\033[38;5;208m"
-BLUE="\033[1;34m"       # new
+BLUE="\033[38;5;34m"       # new
 RED="\033[31m"
 RESET="\033[0m"
 
