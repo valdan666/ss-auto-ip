@@ -147,9 +147,9 @@ echo -en "${ORANGE}Ссылки для импорта:${RESET}"
 cat "$links_file" 2>/dev/null | while read -r line; do
   ip="${line##*#}"
   if printf '%s\n' "${new_ips[@]}" | grep -qx "$ip"; then
-    echo -e "${BLUE}$line${RESET}"
+    echo -e "${GREEN}$line${RESET}"
   else
-    echo -e "\e[1;46m$line${RESET}"
+    echo -e "\e[1;42m$line${RESET}"
   fi
 done
 
