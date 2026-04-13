@@ -20,6 +20,13 @@
 # Проверяем установлен ли Shadowsocks-libev
 if ! command -v ss-server &> /dev/null; then
   echo -e "\033[96mShadowsocks-libev. Устанавливается...\033[0m"
+
+  # Ждём, пока apt не будет занят другим процессом
+  #while lsof /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
+   # echo "Жду освобождения apt..."
+   # sleep 10
+  #done
+  
   apt update -y
   apt install -y shadowsocks-libev jq openssl
 #else
