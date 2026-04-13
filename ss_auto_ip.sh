@@ -139,17 +139,17 @@ if ! crontab -l 2>/dev/null | grep -q "/usr/local/bin/ss_multi_start.sh"; then
 fi
 
 echo
-echo -e "${GREEN}Файлы config:${RESET} $config_dir"
-echo -e "${GREEN}Файл  ссылок:${RESET} $links_file"
+echo -e "${WHITE}Файлы config:${RESET} $config_dir"
+echo -e "${WHITE}Файл  ссылок:${RESET} $links_file"
 echo
-echo -en "${ORANGE}Ссылки для импорта:${RESET}"
+echo -en "${WHITE}Ссылки для импорта:${RESET}" 
 cat "$links_file" 2>/dev/null | while read -r line; do
   ip="${line##*#}"
   if printf '%s\n' "${new_ips[@]}" | grep -qx "$ip"; then
-    echo -e "${WHITE}$line${RESET}"
+    echo -e "${ORANGE}$line${RESET}"
   else
     #echo -e "\e[1;42m$line${RESET}" BLUE
-    echo -e "${BLUE}$line${RESET}"
+    echo -e "${GREEN}$line${RESET}"
   fi
 done
 echo
