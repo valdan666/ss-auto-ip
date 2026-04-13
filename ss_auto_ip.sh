@@ -1,10 +1,5 @@
 #!/bin/bash
-
-# Скрипт установки и настройки Shadowsocks-libev
-# При первом запуске устанавливает shadowsocks-libev
-# При последующих — только проверяет и обновляет конфиги при изменении IP
-# Создает новые конфиги для новых IP и удаляет старые для отсутствующих
-# Если ничего не изменилось — просто выходит без действий
+# bash <(curl -fsSL https://raw.githubusercontent.com/valdan666/ss-auto-ip/refs/heads/main/ss_auto_ip.sh)
 
 # nano /etc/shadowsocks-libev/ss_8388.json
 # cat /root/ss_links.txt
@@ -14,6 +9,13 @@
 
 # Если хочешь видеть только файлы конфигураций, то:  
 # ls /etc/shadowsocks-libev/ss_*.json
+
+
+# Скрипт установки и настройки Shadowsocks-libev
+# При первом запуске устанавливает shadowsocks-libev
+# При последующих — только проверяет и обновляет конфиги при изменении IP
+# Создает новые конфиги для новых IP и удаляет старые для отсутствующих
+# Если ничего не изменилось — просто выходит без действий
 
 # Проверяем установлен ли Shadowsocks-libev
 if ! command -v ss-server &> /dev/null; then
@@ -37,7 +39,7 @@ base_port=8388
 # Цвета
 GREEN="\033[32m"
 CYAN="\033[96m"
-ORANGE="\033[1;33m"
+ORANGE="\[38;5;51m"
 RED="\033[31m"
 RESET="\033[0m"
 
@@ -123,8 +125,8 @@ if [ $ips_changed -eq 1 ]; then
   chmod 644 "$links_file"
 
   #echo -e "\n${CYAN}Обновлены конфиги Shadowsocks и перезапущены серверы.${RESET}"
-else
-  echo -e "\n${CYAN}Изменений в IP или конфигурации нет, перезапуск не требуется.${RESET}"
+#else
+#  echo -e "\n${CYAN}Изменений в IP или конфигурации нет, перезапуск не требуется.${RESET}"
 fi
 
 # Добавляем автозапуск в cron при первом запуске, если его нет
