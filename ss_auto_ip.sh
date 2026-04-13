@@ -44,7 +44,7 @@ BLUE="\033[38;5;34m"       # new
 RED="\033[31m"
 RESET="\033[0m"
 
-While="\e[1;97"
+Whale="\e[1;97"
 
 # Получаем список внешних IP
 current_ips=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -vE '^127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])')
@@ -89,7 +89,7 @@ for ip in $current_ips; do
 EOF
     ips_changed=1
     new_ips+=("$ip")           # new
-    echo -e "${GREEN}new IP: $ip [$port]${RESET}"
+    echo -e "new IP: ${GREEN}$ip [$port]${RESET}"
   fi
 done
 
@@ -100,7 +100,7 @@ for conf in "${existing_confs[@]}"; do
   if ! echo "$current_ips" | grep -qw "$conf_ip"; then
     rm -f "$conf"
     ips_changed=1
-    echo -e "${RED}del IP: $conf_ip${RESET}"
+    echo -e "del IP: ${RED}$conf_ip${RESET}"
   fi
 done
 
@@ -148,9 +148,10 @@ echo -en "${ORANGE}Ссылки для импорта:${RESET}"
 cat "$links_file" 2>/dev/null | while read -r line; do
   ip="${line##*#}"
   if printf '%s\n' "${new_ips[@]}" | grep -qx "$ip"; then
-    echo -e "${While}$line${RESET}"
+    echo -e "${Whale}$line${RESET}"
   else
-    echo -e "\e[1;42m$line${RESET}"
+    #echo -e "\e[1;42m$line${RESET}"
+    echo -e "${Whale}$line${RESET}"
   fi
 done
 
