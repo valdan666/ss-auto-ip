@@ -149,7 +149,7 @@ cat "$links_file" 2>/dev/null | while read -r line; do
     echo -e "${WHITE}$line${RESET}"
   else
     #echo -e "\e[1;42m$line${RESET}" BLUE
-    echo -e "${GREEN}$line${RESET}"
+    echo -e "\e[1m$line${RESET}"
   fi
 done
 echo
